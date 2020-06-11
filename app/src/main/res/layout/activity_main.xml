@@ -7,6 +7,15 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
+    <Button
+        android:id="@+id/btb_get_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp"
+        android:text="Get json data"
+        android:textSize="22sp" />
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -17,14 +26,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center" />
 
-        <Button
-            android:id="@+id/btb_get_data"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="16dp"
-            android:text="Get json data"
-            android:textSize="22sp" />
 
     </ScrollView>
 </LinearLayout>
