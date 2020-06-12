@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -59,18 +60,17 @@ public class MainActivity extends AppCompatActivity {
         String result = "";
         String data = "";
         String parseData = "";
+        ;
         try {
             InputStream in = httpURLConnection.getInputStream();
             BufferedReader bf = new BufferedReader(new InputStreamReader(in));
-            StringBuilder sb = new StringBuilder();
-            String line = null;
-
-            while ((line = bf.readLine())!=null){
-                sb.append(line + "\n");
-                data = sb.toString();
-                result = getSingJsonObject(data);
-                parseData = parseData + result +"\n";
+            String line = "";
+            while (line != null) {
+                line = bf.readLine();
+                result = result + line;
             }
+            parseData = getSingJsonObject(result);
+
         } catch (JSONException e) {
             e.printStackTrace();
         } finally {
@@ -80,14 +80,14 @@ public class MainActivity extends AppCompatActivity {
         return parseData;
     }
 
-    public class GetJsonData extends AsyncTask<URL,Void,String>{
+    public class GetJsonData extends AsyncTask<URL, Void, String> {
 
         @Override
         protected String doInBackground(URL... urls) {
             URL url = urls[0];
             String jsonData = "";
             try {
-               jsonData = httpConnectionResponse(url);
+                jsonData = httpConnectionResponse(url);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -96,19 +96,22 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String jsonData) {
-            txtData.append(jsonData +"\n");
+            txtData.append(jsonData);
         }
     }
+
     public static String getSingJsonObject(String result) throws JSONException {
         String jsonObj = "";
-        JSONObject userPost = new JSONObject(result);
-        int useNumberId = userPost.getInt("id");
-        String userPostTitle = userPost.getString("title");
-        String userPostBody = userPost.getString("body");
-
-        jsonObj = "User Id: " + useNumberId + "\n"
-                + "Title: " + userPostTitle + "\n"
-                + "Post body: " + userPostBody + "\n";
-        return jsonObj;
+        String parseData = "";
+        JSONArray jsonArray = new JSONArray(result);
+        int length = jsonArray.length();
+        for (int i = 0; i < length; i++) {
+            JSONObject jsonObject = (JSONObject) jsonArray.get(i);
+            jsonObj = "User Id: " + jsonObject.getInt("id") + "\n"
+                    + "Title: " + jsonObject.getString("title") + "\n"
+                    + "Post body: " + jsonObject.getString("body") + "\n\n\n";
+            parseData = jsonObj + parseData;
+        }
+        return parseData;
     }
 }
