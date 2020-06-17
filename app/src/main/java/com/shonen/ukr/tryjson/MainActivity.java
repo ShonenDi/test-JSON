@@ -1,13 +1,13 @@
 package com.shonen.ukr.tryjson;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.app.ListActivity;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -20,31 +20,29 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.HashMap;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends ListActivity {
 
     final static String JSON_DATA_URL = "https://jsonplaceholder.typicode.com/posts";
-    private TextView txtData;
-    private Button btbGetData;
+    private final String USER_ID_TAG = "id";
+    private final String USER_POST_TITLE_TAG = "title";
+    private final String USER_POST_BODY_TAG = "body";
+    private ListView userPostList;
+
+    private JSONArray jsonArray = null;
+    ArrayList<HashMap<String, String>> usersPostsList = new ArrayList<HashMap<String, String>>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        txtData = findViewById(R.id.txt_Json_data);
-        btbGetData = findViewById(R.id.btb_get_data);
-        btbGetData.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    new GetJsonData().execute(buildUrlFromUri());
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        try {
+            new GetJsonData().execute(buildUrlFromUri());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -58,9 +56,8 @@ public class MainActivity extends AppCompatActivity {
     public String httpConnectionResponse(URL url) throws IOException {
         HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
         String result = "";
-        String data = "";
-        String parseData = "";
-        ;
+        String userPost = "";
+
         try {
             InputStream in = httpURLConnection.getInputStream();
             BufferedReader bf = new BufferedReader(new InputStreamReader(in));
@@ -69,49 +66,54 @@ public class MainActivity extends AppCompatActivity {
                 line = bf.readLine();
                 result = result + line;
             }
-            parseData = getSingJsonObject(result);
 
-        } catch (JSONException e) {
-            e.printStackTrace();
         } finally {
             httpURLConnection.disconnect();
 
         }
-        return parseData;
+        return result;
     }
 
-    public class GetJsonData extends AsyncTask<URL, Void, String> {
+    public class GetJsonData extends AsyncTask<URL, Void, Void> {
 
         @Override
-        protected String doInBackground(URL... urls) {
+        protected Void doInBackground(URL... urls) {
             URL url = urls[0];
             String jsonData = "";
             try {
                 jsonData = httpConnectionResponse(url);
-            } catch (IOException e) {
+                getArrOfJsonObject(jsonData);
+            } catch (IOException | JSONException e) {
                 e.printStackTrace();
             }
-            return jsonData;
+            return null;
         }
 
         @Override
-        protected void onPostExecute(String jsonData) {
-            txtData.append(jsonData);
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            ListAdapter listAdapter = new SimpleAdapter(MainActivity.this, usersPostsList, R.layout.list_item,
+                    new String[]{USER_ID_TAG, USER_POST_TITLE_TAG, USER_POST_BODY_TAG},
+                    new int[]{R.id.txt_user_id, R.id.txt_user_post_title, R.id.txt_user_post_body});
+            setListAdapter(listAdapter);
         }
+
     }
 
-    public static String getSingJsonObject(String result) throws JSONException {
-        String jsonObj = "";
-        String parseData = "";
-        JSONArray jsonArray = new JSONArray(result);
+    public void getArrOfJsonObject(String result) throws JSONException {
+        jsonArray = new JSONArray(result);
         int length = jsonArray.length();
         for (int i = 0; i < length; i++) {
             JSONObject jsonObject = (JSONObject) jsonArray.get(i);
-            jsonObj = "User Id: " + jsonObject.getInt("id") + "\n"
-                    + "Title: " + jsonObject.getString("title") + "\n"
-                    + "Post body: " + jsonObject.getString("body") + "\n\n\n";
-            parseData = jsonObj + parseData;
+            String userId = jsonObject.getString(USER_ID_TAG);
+            String userPostTitle = jsonObject.getString(USER_POST_TITLE_TAG);
+            String userPostBody = jsonObject.getString(USER_POST_BODY_TAG);
+            HashMap<String, String> userPosts = new HashMap<String, String>();
+            userPosts.put(USER_ID_TAG, userId);
+            userPosts.put(USER_POST_TITLE_TAG, userPostTitle);
+            userPosts.put(USER_POST_BODY_TAG, userPostBody);
+            usersPostsList.add(userPosts);
+
         }
-        return parseData;
     }
 }
